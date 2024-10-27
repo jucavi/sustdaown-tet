@@ -11,10 +11,10 @@ import org.springframework.stereotype.Service;
 @EnableScheduling
 public class ShutDownService {
 
-    @Scheduled(fixedRate = 10000)
+    // @Scheduled(fixedRate = 10000)
     public void checkCondition() {
         if (exhaustRabbitCalls()) {
-            ShutDownAppApplication.exitApplication();
+//            ShutDownAppApplication.exitApplication();
         }
     }
 
