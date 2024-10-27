@@ -9,11 +9,11 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>es.emi</groupId>
-    <artifactId>ShutDownApp</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>shutdown</artifactId>
+    <version>0.0.1</version>
     <packaging>war</packaging>
-    <name>ShutDownApp</name>
-    <description>ShutDownApp</description>
+    <name>shutdown</name>
+    <description>App to test soft shutdown</description>
     <url/>
     <licenses>
         <license/>
@@ -54,6 +54,7 @@
     </dependencies>
 
     <build>
+        <finalName>shutdown##1.0.0</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

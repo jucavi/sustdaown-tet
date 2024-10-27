@@ -1,20 +1,28 @@
 package es.emi.shutdownapp;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.time.ZonedDateTime;
+
 @Controller
-@RequestMapping("/shutdown")
+@RequestMapping("/app")
 public class ShutdownController {
 
-        private final ShutdownExecutor shutdownExecutor;
+        private final ShutDownService service;
 
-        public ShutdownController(ShutdownExecutor shutdownExecutor) {
-            this.shutdownExecutor = shutdownExecutor;
+    public ShutdownController(ShutDownService service) {
+        this.service = service;
+    }
+
+    @RequestMapping("/now")
+        public ResponseEntity<String> now() {
+            return ResponseEntity.ok(ZonedDateTime.now().toString());
         }
 
         @RequestMapping("/exit")
         public void exit() {
-            shutdownExecutor.shutdown();
+            service.exit();
         }
 }
