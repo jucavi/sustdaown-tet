@@ -1,36 +1,54 @@
 package es.emi.shutdownapp;
 
 import lombok.extern.log4j.Log4j2;
-import org.springframework.boot.ExitCodeGenerator;
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Log4j2
-public class ShutdownExecutor implements ExitCodeGenerator {
+public class ShutdownExecutor implements ApplicationListener<ContextClosedEvent>, DisposableBean {
 
-    private final ConfigurableApplicationContext context;
+    private final ScheduledExecutorService scheduledExecutorService;
+    private boolean isShutdown = false;
 
-    public ShutdownExecutor(ConfigurableApplicationContext context) {
-        this.context = context;
+    public ShutdownExecutor(ScheduledExecutorService scheduledExecutorService) {
+        this.scheduledExecutorService = scheduledExecutorService;
     }
 
-    public void shutdown() {
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+        initiateShutdown();
+    }
 
-        try {
-            log.info("Shutting down the application...");
-            //context.close();
-            SpringApplication.exit(context, this);
+    private void initiateShutdown() {
+        if (!isShutdown) {
+            isShutdown = true;
+            log.info("Initiating shutdown...");
 
-        } catch (Exception e) {
-            log.error("Error shutting down the application: {}", e.getMessage());
-            throw new RuntimeException("Application shutdown due to an error", e);
+            // Gracefully shut down the executor
+            scheduledExecutorService.shutdown();
+            try {
+                if (!scheduledExecutorService.awaitTermination(10, TimeUnit.SECONDS)) {
+                    log.warn("Executor did not terminate in the specified time.");
+                    scheduledExecutorService.shutdownNow(); // Force shutdown if not terminated
+                }
+            } catch (InterruptedException e) {
+                log.error("Shutdown interrupted. Forcing shutdown...");
+                scheduledExecutorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+            log.info("Executor shutdown complete.");
         }
     }
 
     @Override
-    public int getExitCode() {
-        return 0;
+    public void destroy() {
+        initiateShutdown();
+        log.info("ShutdownExecutor cleanup completed.");
     }
 }

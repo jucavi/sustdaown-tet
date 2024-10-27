@@ -1,7 +1,11 @@
 package es.emi.shutdownapp;
 
 
+import jakarta.annotation.PreDestroy;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Service;
 
@@ -11,31 +15,29 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @Log4j2
-@EnableScheduling
 public class ShutDownService {
 
-    private final ShutdownExecutor executor;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final ApplicationContext applicationContext;
+    private final ApplicationEventPublisher eventPublisher;
+    private volatile boolean isShutdownInitiated = false;
 
-    public ShutDownService(ShutdownExecutor executor) {
-        log.info("Call it...");
-        this.executor = executor;
+    public ShutDownService(ApplicationContext applicationContext, ApplicationEventPublisher eventPublisher) {
+        this.applicationContext = applicationContext;
+        this.eventPublisher = eventPublisher;
     }
 
-
     public void exit() {
-//            ShutDownAppApplication.exitApplication();
+        if (!isShutdownInitiated) {
+            isShutdownInitiated = true;
+            log.info("Publishing shutdown event...");
+            eventPublisher.publishEvent(new ContextClosedEvent(applicationContext)); // Triggers shutdown
+        } else {
+            log.warn("Shutdown already initiated.");
+        }
+    }
 
-        log.info("Application will shut down due to a persistent communication failure...");
-
-        // Delay shutdown to allow the current HTTP request to complete
-        scheduler.schedule(() -> {
-            try {
-                executor.shutdown();
-                log.info("Application shutdown complete.");
-            } catch (Exception e) {
-                log.error("Error shutting down application: {}", e.getMessage());
-            }
-        }, 4, TimeUnit.SECONDS);
+    @PreDestroy
+    public void cleanup() {
+        log.info("ShutDownService cleanup completed.");
     }
 }
