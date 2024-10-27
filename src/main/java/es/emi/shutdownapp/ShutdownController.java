@@ -22,7 +22,8 @@ public class ShutdownController {
         }
 
         @RequestMapping("/exit")
-        public void exit() {
+        public ResponseEntity<String> exit() {
             service.exit();
+            return ResponseEntity.ok("Shutdown initiated...");
         }
 }
