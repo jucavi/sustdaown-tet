@@ -30,7 +30,10 @@ public class ShutDownService {
         if (!isShutdownInitiated) {
             isShutdownInitiated = true;
             log.info("Publishing shutdown event...");
-            eventPublisher.publishEvent(new ContextClosedEvent(applicationContext)); // Triggers shutdown
+            eventPublisher.publishEvent(new ContextClosedEvent(applicationContext));
+            eventPublisher.publishEvent(new ApplicationShutdownEvent(this));
+            log.info("Service shutdown published.");
+
         } else {
             log.warn("Shutdown already initiated.");
         }

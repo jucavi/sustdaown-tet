@@ -28,7 +28,7 @@ public class ShutdownExecutor implements ApplicationListener<ContextClosedEvent>
     private void initiateShutdown() {
         if (!isShutdown) {
             isShutdown = true;
-            log.info("Initiating shutdown...");
+            log.info("Executor shutdown initiating shutdown...");
 
             // Gracefully shut down the executor
             scheduledExecutorService.shutdown();
